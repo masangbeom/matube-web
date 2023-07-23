@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  apiEndPoint: 'http://matube-alb-30696609.ap-northeast-2.elb.amazonaws.com',
+  apiEndPoint: 'https://ds1axq05pz0cy.cloudfront.net',
   awsRegion: 'ap-northeast-2',
   cognitoIdentityPoolId: 'ap-northeast-2:1faeac65-d7a0-4d20-b774-81700395f7d4',
   vodS3Bucket: 'matube-assets',
