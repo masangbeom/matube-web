@@ -1,0 +1,63 @@
+.profile-wrapper {
+  padding: 16px;
+}
+
+.banner {
+  width: 100%;
+  padding: 32px;
+  .banner-title {
+    font-size: 54px;
+    font-weight: bold;
+  }
+  .banner-description {
+    color: gray;
+  }
+}
+
+.search-bar-wrapper {
+  padding: 32px 0 32px 0;
+  background: #e8e8e8;
+  nz-input-group {
+    width: 40%;
+  }
+}
+
+.videos-wrapper {
+   margin: 0 !important;
+  width: 100%;
+  background: #e8e8e8;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.image-wrapper {
+  position: relative;
+  padding-bottom: 75%;
+}
+.image-wrapper .spin-wrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.image-wrapper img {
+  position: absolute;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.video-upload-button {
+  margin-left: 16px;
+}
+
+.upload-video-form-wrapper {
+  padding: 16px;
+}
+
+.video-form {
+  margin-top: 16px;
+}
+
+.video-file-upload {
+  margin: 32px 0 32px 0;
+}

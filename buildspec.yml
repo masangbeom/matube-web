@@ -1,0 +1,18 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 12
+    commands:
+      - npm i npm@latest -g
+      - npm install -g @angular/cli
+  pre_build:
+    commands:
+      - npm install
+  build:
+    commands:
+      - ng build --prod
+  post_build:
+    commands:
+      - aws s3 sync ./dist/matube-front s3://matube-front
+      - aws cloudfront create-invalidation --distribution-id EC7QUJFTCL0JJ --paths "/*"

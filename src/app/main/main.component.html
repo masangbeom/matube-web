@@ -1,0 +1,147 @@
+<div nz-row nzJustify="end" class="profile-wrapper">
+  <button nz-button nzSize="large" nzDanger *ngIf="!!user"
+          (click)="signOut()">Sign Out
+  </button>
+  <button nz-button nzSize="large" nzType="primary" *ngIf="!user"
+          routerLink="signin">Sign In
+  </button>
+</div>
+<div class="banner" nz-row nzJustify="center">
+  <h1 class="banner-title">Matube VOD</h1>
+  <div nz-col nzSpan="24"></div>
+  <span class="banner-description">
+    @Created By AWS Solutions Architect - Sangbeom, Ma
+  </span>
+</div>
+<div class="search-bar-wrapper" nz-row nzJustify="center">
+  <nz-input-group [nzSuffix]="suffixIconSearch" nzSize="large">
+    <input type="text" nz-input placeholder="Search Video" [(ngModel)]="searchVideo.title"/>
+  </nz-input-group>
+  <ng-template #suffixIconSearch>
+    <i nz-icon nzType="search"></i>
+  </ng-template>
+  <button nz-button class="video-upload-button" nzSize="large" nzType="primary" [disabled]="!user"
+          (click)="showVideoUploadModal()"><i nz-icon nzType="upload"></i>Upload Video
+  </button>
+</div>
+<div class="videos-wrapper" nz-row [nzGutter]="[24, 24]">
+  <div nz-col nzXs="24" nzSm="12" nzMd="12" nzLg="8" nzXl="8" *ngFor="let video of videos | filterBy: searchVideo">
+    <nz-card nzHoverable [nzCover]="coverTemplate">
+      <nz-card-meta [nzTitle]="titleTemp" [nzDescription]="video.description"></nz-card-meta>
+      <nz-divider></nz-divider>
+      <nz-tag nzColor="success" *ngIf="video.upload_state === 'Complete'">
+        <i nz-icon nzType="check-circle"></i>
+        <span>Complete</span>
+      </nz-tag>
+      <nz-tag nzColor="processing" *ngIf="video.upload_state === 'Uploading' || video.upload_state === 'Converting'">
+        <i nz-icon nzType="sync" nzSpin></i>
+        <span>Processing</span>
+      </nz-tag>
+      <nz-tag nzColor="error" *ngIf="video.upload_state === 'Error'">
+        <i nz-icon nzType="close-circle"></i>
+        <span>Error</span>
+      </nz-tag>
+      <nz-row nzJustify="end">
+        <button nz-button nzDanger [disabled]="video.user_name === userName"
+                nz-popconfirm
+                nzPopconfirmTitle="Are you sure delete this video?"
+                (nzOnConfirm)="deleteConfirm(video)"
+                nzPopconfirmPlacement="bottom"
+        >Delete</button>
+      </nz-row>
+      <ng-template #titleTemp>
+        {{video.title}}
+        <div nz-row nzJustify="end">
+          <nz-tag><i nz-icon nzType="user"></i><span>{{video.user_name}}</span></nz-tag>
+        </div>
+      </ng-template>
+    </nz-card>
+    <ng-template #coverTemplate>
+      <div class="image-wrapper" (click)="showPlayerModal(video)">
+        <img *ngIf="video.upload_state === 'Complete'" [alt]="video.title" [src]="video.thumbnail_img"/>
+        <div *ngIf="video.upload_state !== 'Complete'" nz-row nzAlign="middle" nzJustify="center" class="spin-wrapper">
+          <nz-spin nzSize="large"></nz-spin>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<nz-modal [(nzVisible)]="isPlayerModalVisible" [nzTitle]="selectedVideo?.title" [nzFooter]="videoModalFooter"
+          nzWidth="80%" (nzOnCancel)="handleCancel()">
+  <ng-container *nzModalContent>
+    <video-player [videoURL]="selectedVideo.url"></video-player>
+  </ng-container>
+  <ng-template #videoModalFooter>
+    <button nz-button nzType="default" (click)="handleCancel()">Close</button>
+  </ng-template>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="isVideoUploadModalVisible" nzTitle="Upload Video" [nzFooter]="uploadModalFooter"
+          nzWidth="480px" (nzOnCancel)="handleCancel()">
+  <ng-container *nzModalContent>
+    <div class="upload-video-form-wrapper">
+      <nz-steps [nzCurrent]="current">
+        <nz-step nzTitle="Video Description" nzIcon="video-camera-add">
+        </nz-step>
+        <nz-step nzTitle="Upload Video File" nzIcon="file">
+        </nz-step>
+      </nz-steps>
+      <div *ngIf="current === 0" class="video-form">
+        <h3>Title</h3>
+        <input nz-input placeholder="Video title" [(ngModel)]="uploadVideoDto.title"/>
+        <nz-divider></nz-divider>
+        <h3>Description</h3>
+        <textarea rows="4" nz-input [(ngModel)]="uploadVideoDto.description" placeholder="Video description"></textarea>
+        <nz-divider></nz-divider>
+        <div nz-row nzJustify="end" style="margin: 16px 0 16px 0">
+          <button nz-button nzType="default" (click)="createVideo()">
+            <span>Next</span>
+          </button>
+        </div>
+      </div>
+      <div class="video-file-upload" *ngIf="current === 1">
+        <div nz-row nzJustify="center">
+          <nz-radio-group [(ngModel)]="uploadMethod" style="margin-bottom: 32px;">
+            <label nz-radio-button [nzValue]="'s3'">Upload to S3</label>
+            <label nz-radio-button [nzValue]="'vpc'">Upload to VPC</label>
+          </nz-radio-group>
+        </div>
+        <div nz-row nzJustify="center">
+          <ng-container *ngIf="uploadMethod === 's3'">
+            <nz-upload
+              [nzCustomRequest]="customUploadReq"
+              [nzLimit]="1"
+              [nzAccept]="'video/*'"
+              [nzHeaders]="{ Accept: 'application/json', 'Content-Type': 'multipart/form-data' }"
+              nzShowUploadList="false"
+              nzMultiple="false">
+              <button [disabled]="isUploading" nz-button nzType="primary" nzSize="large"><i nz-icon
+                                                                                                    nzType="upload"></i>Upload
+                Upload to S3
+              </button>
+            </nz-upload>
+          </ng-container>
+          <ng-container *ngIf="uploadMethod === 'vpc'">
+            <nz-upload
+              [nzAction]="apiEndPoint + '/video-upload?uuid=' + uploadVideoDto.uuid"
+              [nzLimit]="1"
+              [nzAccept]="'video/*'"
+              [nzHeaders]="{ Accept: 'application/json' }"
+              nzShowUploadList="false"
+              (nzChange)="handleChange($event)"
+              nzMultiple="false">
+              <button [disabled]="isUploading" nz-button nzType="primary" nzSize="large"><i nz-icon
+                                                                                                    nzType="upload"></i>Upload
+                Upload to VPC
+              </button>
+            </nz-upload>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template #uploadModalFooter>
+    <button nz-button nzType="default" (click)="handleCancel()">Close</button>
+  </ng-template>
+</nz-modal>
